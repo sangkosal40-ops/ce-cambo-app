@@ -7,7 +7,7 @@ Original file is located at
     https://colab.research.google.com/drive/1znczN7S_UOavLV-2fafX4g0gic1Myh1v
 """
 
-pip install -q streamlit folium streamlit-folium openpyxl pydeck
+
 
 # Commented out IPython magic to ensure Python compatibility.
 # %%writefile /content/app_v6_10.py
