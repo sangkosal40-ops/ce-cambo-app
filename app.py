@@ -1,7 +1,4 @@
-import zipfile
-import os
-
-app_code = """import streamlit as st
+import streamlit as st
 import sqlite3
 import os
 import hashlib
@@ -67,13 +64,13 @@ def db_connection(): return sqlite3.connect(DB, check_same_thread=False)
 def init_database():
     with db_connection() as conn:
         cur = conn.cursor()
-        cur.execute(\"\"\"CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL, phone TEXT, password TEXT NOT NULL, role TEXT DEFAULT 'participant', status TEXT DEFAULT 'active', profile_pic TEXT, created_at TEXT)\"\"\")
+        cur.execute("""CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL, phone TEXT, password TEXT NOT NULL, role TEXT DEFAULT 'participant', status TEXT DEFAULT 'active', profile_pic TEXT, created_at TEXT)""")
         try: cur.execute("ALTER TABLE users ADD COLUMN profile_pic TEXT")
         except sqlite3.OperationalError: pass
-        cur.execute(\"\"\"CREATE TABLE IF NOT EXISTS files (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT NOT NULL, original_name TEXT NOT NULL, category TEXT, owner TEXT, file_type TEXT, file_size REAL, location TEXT, uploaded_at TEXT)\"\"\")
-        cur.execute(\"\"\"CREATE TABLE IF NOT EXISTS course_files (id INTEGER PRIMARY KEY AUTOINCREMENT, course_name TEXT NOT NULL, lesson_name TEXT, filename TEXT NOT NULL, original_name TEXT NOT NULL, uploaded_by TEXT, uploaded_at TEXT)\"\"\")
-        cur.execute(\"\"\"CREATE TABLE IF NOT EXISTS activities (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, action TEXT, created_at TEXT)\"\"\")
-        cur.execute(\"\"\"CREATE TABLE IF NOT EXISTS forum_posts (id INTEGER PRIMARY KEY AUTOINCREMENT, user_name TEXT NOT NULL, content TEXT NOT NULL, created_at TEXT)\"\"\")
+        cur.execute("""CREATE TABLE IF NOT EXISTS files (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT NOT NULL, original_name TEXT NOT NULL, category TEXT, owner TEXT, file_type TEXT, file_size REAL, location TEXT, uploaded_at TEXT)""")
+        cur.execute("""CREATE TABLE IF NOT EXISTS course_files (id INTEGER PRIMARY KEY AUTOINCREMENT, course_name TEXT NOT NULL, lesson_name TEXT, filename TEXT NOT NULL, original_name TEXT NOT NULL, uploaded_by TEXT, uploaded_at TEXT)""")
+        cur.execute("""CREATE TABLE IF NOT EXISTS activities (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, action TEXT, created_at TEXT)""")
+        cur.execute("""CREATE TABLE IF NOT EXISTS forum_posts (id INTEGER PRIMARY KEY AUTOINCREMENT, user_name TEXT NOT NULL, content TEXT NOT NULL, created_at TEXT)""")
         conn.commit()
 
 init_database()
@@ -183,7 +180,7 @@ def get_bbox_from_features(features):
 
 def fetch_osm_context(min_lat, min_lon, max_lat, max_lon):
     overpass_url = "https://overpass.openstreetmap.fr/api/interpreter"
-    query = f\"\"\"
+    query = f"""
     [out:json];
     (
       way["building"]({min_lat},{min_lon},{max_lat},{max_lon});
@@ -192,7 +189,7 @@ def fetch_osm_context(min_lat, min_lon, max_lat, max_lon):
     out body;
     >;
     out skel qt;
-    \"\"\"
+    """
     try:
         headers = {'User-Agent': 'CECamboPro/1.0 (sangkosal40@gmail.com)'}
         response = requests.get(overpass_url, params={'data': query}, headers=headers, timeout=30)
@@ -268,7 +265,7 @@ def generate_masterplan_dxf(features, roads, use_local, b_lat, b_lon, b_n, b_e):
         dxf_lines.extend(["0", "SEQEND"])
 
     dxf_lines.extend(["0", "ENDSEC", "0", "EOF"])
-    return "\\n".join(dxf_lines)
+    return "\n".join(dxf_lines)
 
 def generate_3d_dae(buildings, use_local, b_lat, b_lon, b_n, b_e):
     def to_local(lon, lat):
@@ -367,11 +364,11 @@ def generate_3d_dae(buildings, use_local, b_lat, b_lon, b_n, b_e):
 
 def unicode_to_legacy_text(text):
     if not text: return ""
-    norm_text = text.replace('\\u200b', '').replace('\\u200c', '').replace('\\u200d', '')
+    norm_text = text.replace('\u200b', '').replace('\u200c', '').replace('\u200d', '')
     norm_text = unicodedata.normalize("NFC", norm_text)
     global_replacements = {'ខ្ញុំ': '´', 'ឲ្យ': '[', 'ឲ': 'eGa', '«': '{', '»': '}', '០':'0', '១':'1', '២':'2', '៣':'3', '៤':'4', '៥':'5', '៦':'6', '៧':'7', '៨':'8', '៩':'9', '។':'.', '៕':'?', 'ៗ':',', '៖':'³', '៛':'E'}
     for k, v in global_replacements.items(): norm_text = norm_text.replace(k, v)
-    cons_map = {'ក':'k', 'ខ':'x', 'គ':'K', 'ឃ':'X', 'ង':'g', 'ច':'c', 'ឆ':'q', 'ជ':'C', 'ឈ':'Q', 'ញ':'j', 'ដ':'d', 'ឋ':'z', 'ឌ':'D', 'ឍ':'Z', 'ណ':'N', 'ត':'t', 'ថ':'f', 'ទ':'T', 'ធ':'F', 'ន':'n', 'ប':'b', 'ផ':'p', 'ព':'B', 'ភ':'P', 'ម':'m', 'យ':'y', 'រ':'r', 'ល':'l', 'វ':'v', 'ស':'s', 'ហ':'h', 'ឡ':'L', 'អ':'G', 'ឥ':'\\\\', 'ឯ':'É', 'ឧ':'U', 'ឪ':']'}
+    cons_map = {'ក':'k', 'ខ':'x', 'គ':'K', 'ឃ':'X', 'ង':'g', 'ច':'c', 'ឆ':'q', 'ជ':'C', 'ឈ':'Q', 'ញ':'j', 'ដ':'d', 'ឋ':'z', 'ឌ':'D', 'ឍ':'Z', 'ណ':'N', 'ត':'t', 'ថ':'f', 'ទ':'T', 'ធ':'F', 'ន':'n', 'ប':'b', 'ផ':'p', 'ព':'B', 'ភ':'P', 'ម':'m', 'យ':'y', 'រ':'r', 'ល':'l', 'វ':'v', 'ស':'s', 'ហ':'h', 'ឡ':'L', 'អ':'G', 'ឥ':'\\', 'ឯ':'É', 'ឧ':'U', 'ឪ':']'}
     sub_map = {'្ក':'á', '្ខ':'â', '្គ':'ã', '្ឃ':'ä', '្ង':'¶', '្ច':'©', '្ឆ':'æ', '្ជ':'¢', '្ឈ':'è', '្ញ':'é', '្ដ':'þ', '្ឋ':'æ', '្ឌ':'ì', '្ឍ':'í', '្ណ':'î', '្ត':'þ', '្ថ':'ß', '្ទ':'Þ', '្ធ':'ñ', '្ន':'ñ', '្ប':',', '្ផ':'-', '្ព':'<', '្ភ':'/', '្ម':'µ', '្យ':'ü', '្រ':'R', '្ល':'ø', '្វ':'V', '្ស':'S', '្ហ':'x', '្អ':'¥'}
     sign_map = { 'ំ':'M', 'ះ':'H', 'ៈ':'"', '់':';', '៉':':', '៊':'/', '៍':'_', '័':'½', '៌':'~', '៏':'¾', '៎':'¿', '៑':'' }
     syllable_regex = r'([ក-អឥ-ឳឯ])(៉|៊)?((?:្[ក-អ])*)(ា|ិ|ី|ឹ|ឺ|ុ|ូ|ួ|ើ|ឿ|ៀ|េ|ែ|ៃ|ោ|ៅ)?(ំ|ះ|ៈ|់|៍|័|៌|៎|៏|៑)?'
@@ -426,7 +423,7 @@ input_bg = "#111827" if is_dark else "#FFFFFF"
 input_text = "#F8FAFC" if is_dark else "#0F172A"
 glow_effect = "glow-dark 3s infinite alternate" if is_dark else "glow-light 3s infinite alternate"
 
-st.markdown(f\"\"\"
+st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
     @keyframes glow-dark {{ 0% {{ box-shadow: 0 0 10px rgba(128,0,128,0.3), 0 0 15px rgba(0,255,128,0.2); }} 50% {{ box-shadow: 0 0 20px rgba(128,0,128,0.6), 0 0 30px rgba(0,255,128,0.4); }} 100% {{ box-shadow: 0 0 10px rgba(128,0,128,0.3), 0 0 15px rgba(0,255,128,0.2); }} }}
@@ -446,7 +443,7 @@ st.markdown(f\"\"\"
     [data-testid="stSidebar"] .stRadio > div > label:hover {{ background: linear-gradient(90deg, rgba(255,105,180,0.15) 0%, transparent 100%); transform: translateX(5px); }}
     [data-testid="stSidebar"] .stRadio > div > label:hover p {{ color: {theme_colors['accent1']} !important; text-shadow: 0 0 5px rgba(0, 201, 255, 0.4); }}
 </style>
-\"\"\", unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 logo_paths = ["logo.jpg", "logo.png"]
 logo_found = next((p for p in logo_paths if os.path.exists(p)), None)
@@ -459,7 +456,7 @@ if logo_found:
     except: pass
 
 if logo_b64:
-    st.sidebar.markdown(f\"\"\"<div style="text-align: center; margin-bottom: 20px; margin-top: -50px;"><img src="data:image/{ext};base64,{logo_b64}" style="width: 80%; border-radius: 50%; box-shadow: 0 5px 20px rgba(0, 201, 255, 0.4); border: 2px solid {theme_colors['accent1']};"></div>\"\"\", unsafe_allow_html=True)
+    st.sidebar.markdown(f"""<div style="text-align: center; margin-bottom: 20px; margin-top: -50px;"><img src="data:image/{ext};base64,{logo_b64}" style="width: 80%; border-radius: 50%; box-shadow: 0 5px 20px rgba(0, 201, 255, 0.4); border: 2px solid {theme_colors['accent1']};"></div>""", unsafe_allow_html=True)
 else: st.sidebar.markdown("<h2 class='gradient-text' style='text-align:center;'>🏗️ CE-CAMBO V12.0</h2>", unsafe_allow_html=True)
 
 avatar_header_html = "👤"; avatar_sidebar_html = "<div style='font-size:60px; text-align:center;'>🧑‍💻</div>"
@@ -490,11 +487,11 @@ if st.session_state.user:
         st.session_state.user = None; st.session_state.selected_course = None; st.session_state.selected_file_section = None; st.rerun()
 
 top_logo_html = f'<img src="data:image/{ext};base64,{logo_b64}" style="height:35px; width:35px; border-radius:50%; margin-right:10px; vertical-align: middle;">' if logo_b64 else '🏗️ '
-st.markdown(f\"\"\"<div style="display:flex; justify-content:space-between; align-items:center; padding:15px 25px; background:{theme_colors['card_bg']}; border-radius:20px; border:1px solid {theme_colors['border']}; margin-bottom:30px;"><div style="font-size:24px; font-weight:700;" class="gradient-text">{top_logo_html}CE-CAMBO HUB</div><div style="color:{theme_colors['sub_text']}; font-size:14px; display:flex; align-items:center; gap:10px;"><span>📅 {datetime.now().strftime("%d %b %Y")}</span> | <span style="display:flex; align-items:center; gap:8px;">{avatar_header_html} {html.escape(st.session_state.user["name"] if st.session_state.user else "ភ្ញៀវ (Guest)")}</span></div></div>\"\"\", unsafe_allow_html=True)
+st.markdown(f"""<div style="display:flex; justify-content:space-between; align-items:center; padding:15px 25px; background:{theme_colors['card_bg']}; border-radius:20px; border:1px solid {theme_colors['border']}; margin-bottom:30px;"><div style="font-size:24px; font-weight:700;" class="gradient-text">{top_logo_html}CE-CAMBO HUB</div><div style="color:{theme_colors['sub_text']}; font-size:14px; display:flex; align-items:center; gap:10px;"><span>📅 {datetime.now().strftime("%d %b %Y")}</span> | <span style="display:flex; align-items:center; gap:8px;">{avatar_header_html} {html.escape(st.session_state.user["name"] if st.session_state.user else "ភ្ញៀវ (Guest)")}</span></div></div>""", unsafe_allow_html=True)
 
 if selected_menu == "ទំព័រដើម (Dashboard)":
     if not st.session_state.user:
-        st.markdown(\"\"\"<div class="glass-card" style="text-align:center; padding: 40px;"><h1 class="gradient-text" style="font-size: 3em; margin-bottom: 10px;">សូមស្វាគមន៍មកកាន់ CE-CAMBO PRO V12.0</h1><p style="font-size: 1.2em;">វេទិកាឌីជីថលសម្រាប់វិស្វករសំណង់កម្ពុជា</p></div>\"\"\", unsafe_allow_html=True)
+        st.markdown("""<div class="glass-card" style="text-align:center; padding: 40px;"><h1 class="gradient-text" style="font-size: 3em; margin-bottom: 10px;">សូមស្វាគមន៍មកកាន់ CE-CAMBO PRO V12.0</h1><p style="font-size: 1.2em;">វេទិកាឌីជីថលសម្រាប់វិស្វករសំណង់កម្ពុជា</p></div>""", unsafe_allow_html=True)
         st.markdown("<div class='glass-card' style='text-align:center;'><h3>📽️ ស្វែងយល់ពីកម្មវិធីរបស់យើង</h3><p style='margin-bottom: 20px;'>សូមទស្សនាវីដេអូណែនាំខាងក្រោម ដើម្បីស្វែងយល់ពីរបៀបដែលកម្មវិធីយើងអាចជួយសម្រួលការងារវិស្វកម្មរបស់អ្នក។</p>", unsafe_allow_html=True)
         video_paths = ["promo.mp4", "IMG_3729.MOV"]
         vid_found = next((vp for vp in video_paths if os.path.exists(vp)), None)
@@ -502,8 +499,8 @@ if selected_menu == "ទំព័រដើម (Dashboard)":
         else: st.info("💡 អ្នកអាចបន្ថែមវីដេអូណែនាំ (promo.mp4) ដើម្បីបង្ហាញនៅទីនេះ។")
         st.markdown("</div>", unsafe_allow_html=True)
     else:
-        st.markdown(\"\"\"<div style='background: linear-gradient(90deg, rgba(0, 201, 255, 0.1), rgba(96, 239, 255, 0.05)); border-left: 5px solid #00C9FF; padding: 15px 20px; border-radius: 10px; margin-bottom: 25px;'><h4 style='margin-top: 0; color: #00C9FF;'>📢 ព័ត៌មានថ្មីៗពីប្រព័ន្ធ (Announcements)</h4><p style='margin-bottom: 0;'><b>[Admin]:</b> សូមស្វាគមន៍មកកាន់ CE-CAMBO V12.0! បញ្ហាគូសវាស និងផែនទីខ្មៅ ត្រូវបានជួសជុល១០០% ដោយប្រើ Google Satellite!</p></div>\"\"\", unsafe_allow_html=True)
-        st.markdown(f\"\"\"<div class="glass-card" style="text-align:center; padding: 40px;"><h1 class="gradient-text" style="font-size: 3em; margin-bottom: 10px;">រីករាយការត្រលប់មកវិញ, {st.session_state.user["name"]}!</h1><p style="font-size: 1.2em;">CE-CAMBO PRO V12.0 - ពង្រឹងប្រសិទ្ធភាពការងារវិស្វកម្មរបស់អ្នក</p></div>\"\"\", unsafe_allow_html=True)
+        st.markdown("""<div style='background: linear-gradient(90deg, rgba(0, 201, 255, 0.1), rgba(96, 239, 255, 0.05)); border-left: 5px solid #00C9FF; padding: 15px 20px; border-radius: 10px; margin-bottom: 25px;'><h4 style='margin-top: 0; color: #00C9FF;'>📢 ព័ត៌មានថ្មីៗពីប្រព័ន្ធ (Announcements)</h4><p style='margin-bottom: 0;'><b>[Admin]:</b> សូមស្វាគមន៍មកកាន់ CE-CAMBO V12.0! បញ្ហាគូសវាស និងផែនទីខ្មៅ ត្រូវបានជួសជុល១០០% ដោយប្រើ Google Satellite!</p></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="glass-card" style="text-align:center; padding: 40px;"><h1 class="gradient-text" style="font-size: 3em; margin-bottom: 10px;">រីករាយការត្រលប់មកវិញ, {st.session_state.user["name"]}!</h1><p style="font-size: 1.2em;">CE-CAMBO PRO V12.0 - ពង្រឹងប្រសិទ្ធភាពការងារវិស្វកម្មរបស់អ្នក</p></div>""", unsafe_allow_html=True)
         st.markdown("<div class='glass-card' style='text-align:center;'><h3>🎉 វីដេអូស្វាគមន៍ (Welcome Video)</h3><p style='margin-bottom: 20px;'>សូមស្វាគមន៍ការត្រលប់មកកាន់ CE-CAMBO HUB!</p>", unsafe_allow_html=True)
         welcome_video_paths = ["welcome.mp4"]
         welcome_vid_found = next((vp for vp in welcome_video_paths if os.path.exists(vp)), None)
@@ -844,7 +841,7 @@ elif selected_menu == "វេទិកាសួរសំណួរ (Q&A Forum)":
     if posts:
         for p_id, p_user, p_content, p_time in posts:
             is_admin_post = (p_user == "System Admin"); user_icon = "👑" if is_admin_post else "🧑‍💻"; color_accent = theme_colors['accent2'] if is_admin_post else theme_colors['accent1']
-            st.markdown(f\"\"\"<div class='glass-card' style='padding: 20px; margin-bottom: 15px;'><div style='display: flex; align-items: center; gap: 15px; margin-bottom: 10px;'><div style='font-size: 30px;'>{user_icon}</div><div><b style='font-size: 16px; color: {color_accent};'>{html.escape(p_user)}</b> <br><small style='color: #94A3B8;'>{p_time}</small></div></div><p style='font-size: 16px; white-space: pre-wrap;'>{html.escape(p_content)}</p><div style='margin-top: 15px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1);'><small style='color: #94A3B8; cursor: pointer;'>💬 ឆ្លើយតប (Reply) - <span style='font-size:12px'>មុខងារឆ្លើយតបនឹងបើកឆាប់ៗនេះ</span></small></div></div>\"\"\", unsafe_allow_html=True)
+            st.markdown(f"""<div class='glass-card' style='padding: 20px; margin-bottom: 15px;'><div style='display: flex; align-items: center; gap: 15px; margin-bottom: 10px;'><div style='font-size: 30px;'>{user_icon}</div><div><b style='font-size: 16px; color: {color_accent};'>{html.escape(p_user)}</b> <br><small style='color: #94A3B8;'>{p_time}</small></div></div><p style='font-size: 16px; white-space: pre-wrap;'>{html.escape(p_content)}</p><div style='margin-top: 15px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1);'><small style='color: #94A3B8; cursor: pointer;'>💬 ឆ្លើយតប (Reply) - <span style='font-size:12px'>មុខងារឆ្លើយតបនឹងបើកឆាប់ៗនេះ</span></small></div></div>""", unsafe_allow_html=True)
     else: st.info("មិនទាន់មានសំណួរនៅឡើយទេ។ សូមសរសេរសំណួររបស់អ្នកនៅខាងលើ! (No posts yet. Be the first to ask!)")
 
 elif selected_menu == "បំប្លែងអក្សរ (Unicode to Limon)":
@@ -946,7 +943,7 @@ elif selected_menu == "ទិន្នន័យអង្កេត (Data Survey)"
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='openpyxl') as writer: c3d_df.to_excel(writer, index=False, sheet_name='AutoCAD_Data')
                 with c_dl1: st.download_button(label="📥 ទាញយកជា Excel (.xlsx)", data=output.getvalue(), file_name='AutoCAD_Survey_Points.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', use_container_width=True)
-                script_text = "\\n".join(c3d_df['AutoCAD Script (E,N,Z)'].tolist())
+                script_text = "\n".join(c3d_df['AutoCAD Script (E,N,Z)'].tolist())
                 with c_dl2: st.download_button(label="📥 ទាញយកជា AutoCAD Script (.txt)", data=script_text, file_name='Points_Script.txt', mime='text/plain', use_container_width=True)
     with t_photo:
         st.info("💡 អាប់ឡូតរូបថតតារាង Survey របស់អ្នក ដើម្បីទាញយកជាអក្សរ។")
@@ -963,7 +960,7 @@ elif selected_menu == "ទិន្នន័យអង្កេត (Data Survey)"
                             st.rerun()
                         except Exception as e: st.error(f"មានបញ្ហា (Error): {e}")
             if "ocr_extracted" in st.session_state and st.session_state.ocr_name == img_file.name:
-                lines = [line.split() for line in st.session_state.ocr_extracted.split('\\n') if line.strip()]
+                lines = [line.split() for line in st.session_state.ocr_extracted.split('\n') if line.strip()]
                 if lines:
                     df_img = pd.DataFrame(lines)
                     df_img.columns = [str(i) for i in df_img.columns]
@@ -990,7 +987,7 @@ elif selected_menu == "ទិន្នន័យអង្កេត (Data Survey)"
                         output_ocr = io.BytesIO()
                         with pd.ExcelWriter(output_ocr, engine='openpyxl') as writer: c3d_df_ocr.to_excel(writer, index=False, sheet_name='AutoCAD_Data')
                         with c_dl1_ocr: st.download_button(label="📥 ទាញយកជា Excel (.xlsx)", data=output_ocr.getvalue(), file_name='OCR_AutoCAD_Survey.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', use_container_width=True)
-                        script_text_ocr = "\\n".join(c3d_df_ocr['AutoCAD Script (E,N,Z)'].tolist())
+                        script_text_ocr = "\n".join(c3d_df_ocr['AutoCAD Script (E,N,Z)'].tolist())
                         with c_dl2_ocr: st.download_button(label="📥 ទាញយកជា AutoCAD Script (.txt)", data=script_text_ocr, file_name='OCR_Points_Script.txt', mime='text/plain', use_container_width=True)
 
 elif selected_menu == "គណនីរបស់ខ្ញុំ (My Profile)":
@@ -1062,20 +1059,3 @@ elif selected_menu == "ចូលគណនី (Login / Register)":
                         st.success("ចុះឈ្មោះបានជោគជ័យ! កំពុងចូលគណនី... (Registration Successful!)")
                         st.rerun()
                     else: st.error("ចុះឈ្មោះបរាជ័យ។ អ៊ីមែលនេះអាចមានរួចហើយ។ (Registration failed. Email might already exist.)")
-"""
-
-req_content = """streamlit
-folium
-streamlit-folium
-openpyxl
-pydeck
-pytesseract
-pandas
-Pillow
-requests"""
-
-with zipfile.ZipFile('CE_CAMBO_WebApp.zip', 'w') as zipf:
-    zipf.writestr('app.py', app_code)
-    zipf.writestr('requirements.txt', req_content)
-
-print("Zip file generated successfully.")
